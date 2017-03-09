@@ -60,7 +60,7 @@ function calculateDistance(point1X, point1Y, point2X, point2Y) {
 //
 // Create a Firework particle class constructor function
 //
-function FireWork(startX, startY, targetX, targetY) {
+function Firework(startX, startY, targetX, targetY) {
     
     this.x = startX;
     this.y = startY;
@@ -108,8 +108,19 @@ function FireWork(startX, startY, targetX, targetY) {
 // Draw the Firework particle - method of the Firework class
 //
 
-FireWork.draw = function() {
+Firework.prototype.draw = function() {
     
+    ctx.beginPath();
     
+    // Move to the last tracked coordinate (last element) in the
+    // this.coordinates array and 
+    // then draw a line to the current x and y coordinate
+    ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+    
+    ctx.lineTo(this.x, this.y);
+    
+    ctx.strokeStyle = 'hsl(' + hue + ', 100%, ' + this.brightness + '%)';
+    
+    //ctx.stroke();
     
 }
