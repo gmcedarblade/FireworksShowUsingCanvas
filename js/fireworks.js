@@ -134,6 +134,24 @@ Firework.prototype.draw = function() {
     
 }
 
+// 
+// Update (animate) the Firework particle
+//
+Firework.prototype.update = function(index) {
+    
+    // Make the target circle pulsate by adjusting its radius
+    if (this.targetRadius < 8) {
+        
+        this.targetRadius += .3;
+        
+    } else {
+        
+        this.targetRadius = 1;
+        
+    }
+    
+}
+
 //
 // heartBeat will be called framerate time per second
 //
@@ -173,6 +191,7 @@ function heartBeat() {
     while(i--) {
         
         fireworks[i].draw();
+        fireworks[i].update(i);
         
     }
     
