@@ -142,6 +142,61 @@ function heartBeat() {
     // Call this function recursively framerate times per second
     requestAnimationFrame(heartBeat);
     
+    // increase the hue value slightly to get different
+    // firework colors over time.
+    hue += 0.5;
+    
+    // Normally, ctx.clearRect() would be used to clear the
+    // canvas (either all of it or part of it), but we want
+    // to create a trail effect on our firework as it travels
+    // through the night sky...
+    //
+    // Setting the composite operation of the  context to 
+    // a value of 'destination-out' will allow us to clear
+    // the canvas at a specific opacity, rather than wiping
+    // completely clear.
+    ctx.globalCompositeOperation = 'destination-out';
+    
+    // Decrease the alpha value to create more prominent trails
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Setting a new composite operation value of 'lighter'
+    // creates bright highlight points as the fireworks and 
+    // particles overlap each other.
+    ctx.globalCompositeOperation = 'lighter';
+    
+    // Loop over each Firework particle, draw it, and animate it.
+    var i = fireworks.length;
+    
+    while(i--) {
+        
+        fireworks[i].draw();
+        
+    }
+    
+    // Launch fireworks automatically to random target coordinates
+    // when the mouse is not pressed down
+    if (timerTick >= timerTotal) {
+        
+        if (!mouseDown) { // mouse is not down
+        
+            // Launch a firework particle from bottom-middle
+            // of screen, then set random target coordinates.
+            // Note, target y-position should always be in
+            // top half of screen.
+            fireworks.push(new Firework(canvasWidth/2, canvasHeight, randRange(0, canvasWidth), randRange(0, canvasHeight/2)));
+            
+            timerTick = 0;
+        }
+        
+    } else {
+        
+        timerTick++;
+        
+    }
+    
 }
 
 // Call heartBeat() once the page loads
