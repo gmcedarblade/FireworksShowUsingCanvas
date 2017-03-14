@@ -121,6 +121,28 @@ Firework.prototype.draw = function() {
     
     ctx.strokeStyle = 'hsl(' + hue + ', 100%, ' + this.brightness + '%)';
     
-    //ctx.stroke();
+    ctx.stroke();
+    
+    // Draw the circle for this firework's target as
+    // a pulsing circle
+    
+    ctx.beginPath();
+    
+    ctx.arc(this.targetX, this.targetY, this.targetRadius, 0, Math.PI*2);
+    
+    ctx.stroke();
     
 }
+
+//
+// heartBeat will be called framerate time per second
+//
+function heartBeat() {
+    
+    // Call this function recursively framerate times per second
+    requestAnimationFrame(heartBeat);
+    
+}
+
+// Call heartBeat() once the page loads
+window.onload = heartBeat;
