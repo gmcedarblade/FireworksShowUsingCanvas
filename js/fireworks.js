@@ -139,6 +139,14 @@ Firework.prototype.draw = function() {
 //
 Firework.prototype.update = function(index) {
     
+    // remove the last element in the coordinates array property
+    this.coordinates.pop();
+    
+    // Add current coordinates of the firework to the
+    // beginning of the coordinates array (insert)
+    this.coordinates.unshift([this.x, this.y]);
+    
+    
     // Make the target circle pulsate by adjusting its radius
     if (this.targetRadius < 8) {
         
@@ -150,6 +158,39 @@ Firework.prototype.update = function(index) {
         
     }
     
+    // speed up the firework
+    this.speed *= this.acceleration;
+    
+    // calculate the current velocities based on angle and speed
+    
+    var velocityX = Math.cos(this.angle) *  this.speed,
+        velocityY = Math.sin(this.angle) * this.speed;
+    
+    // How far will the firework have traveled with above
+    // velocities applied?
+    
+    this.distanceTraveled = calculateDistance(this.startX, this.startY, this.x + velocityX, this.y + velocityY);
+    
+    // If the distance traveled,, including velocities,
+    // is greateer than the initial distance to the target
+    // then the target is reached
+    
+    if (this.distanceTraveled >= this.distanceToTarget) {
+        
+        // create explosion (another particle)
+        
+        // create smoke (another particle)
+        
+        // cleanup firework particle by removing it from array
+        
+        fireworks.splice(index, 1);
+        
+    } else { // we have not reached target so move our particle
+        
+        this.x += velocityX;
+        this.y += velocityY;
+        
+    }
 }
 
 //
