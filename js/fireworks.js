@@ -139,6 +139,14 @@ Firework.prototype.draw = function() {
 //
 Firework.prototype.update = function(index) {
     
+    // remove the last element in the coordinates array property
+    this.coordinates.pop();
+    
+    // Add current coordinates of the firework to the
+    // beginning of the coordinates array (insert)
+    this.coordinates.unshift([this.x, this.y]);
+    
+    
     // Make the target circle pulsate by adjusting its radius
     if (this.targetRadius < 8) {
         
@@ -147,6 +155,206 @@ Firework.prototype.update = function(index) {
     } else {
         
         this.targetRadius = 1;
+        
+    }
+    
+    // speed up the firework
+    this.speed *= this.acceleration;
+    
+    // calculate the current velocities based on angle and speed
+    
+    var velocityX = Math.cos(this.angle) *  this.speed,
+        velocityY = Math.sin(this.angle) * this.speed;
+    
+    // How far will the firework have traveled with above
+    // velocities applied?
+    
+    this.distanceTraveled = calculateDistance(this.startX, this.startY, this.x + velocityX, this.y + velocityY);
+    
+    // If the distance traveled,, including velocities,
+    // is greateer than the initial distance to the target
+    // then the target is reached
+    
+    if (this.distanceTraveled >= this.distanceToTarget) {
+        
+        // create explosion (another particle)
+        
+        createExplosion(this.targetX, this.targetY);
+        
+        // create smoke (another particle)
+        
+        createSmoke(this.targetX, this.targetY);
+        
+        // cleanup firework particle by removing it from array
+        
+        fireworks.splice(index, 1);
+        
+    } else { // we have not reached target so move our particle
+        
+        this.x += velocityX;
+        this.y += velocityY;
+        
+    }
+}
+
+//
+// Create Explosion particles
+//
+function createExplosion(x, y) {
+    
+    var particleCount = 80;
+    
+    while(particleCount--) {
+        particles.push(new ExplosionParticle(x, y));
+    }
+    
+}
+
+//
+// ExplosionParticle Constructor function
+//
+
+function ExplosionParticle(x, y) {
+    
+    this.x = x;
+    this.y = y;
+    
+    // Track the past coordinates of each explosion
+    // particle to create a trail effect
+    this.coordinates = [];
+    this.coordinateCount = Math.round(randRange(10, 20));
+    
+    // populate the initial coordinate collection with the 
+    // current coordinates 
+    while(this.coordinateCount--) {
+        
+        this.coordinates.push([this.x, this.y]);
+        
+    }
+    
+    this.angle = randRange(0, Math.PI*2);
+    
+    this.speed = randRange(1, 10);
+    
+    this.friction = .95;
+    
+    this.gravity = 1;
+    
+    this.hue = randRange(hue - 20, hue + 20);
+    this.brightness = randRange(50, 80);
+    
+    this.alpha = 1;
+    
+    this.decay = randRange(.003, .006);
+    
+}
+
+//
+// Draw the Explosion particle - method of the Explosion class
+//
+
+ExplosionParticle.prototype.draw = function() {
+    
+    ctx.beginPath();
+    
+    // Move to the last tracked coordinate (last element) in the
+    // this.coordinates array and 
+    // then draw a line to the current x and y coordinate
+    ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+    
+    ctx.quadraticCurveTo(this.x + 1, this.y - Math.round(randRange(5, 10)), this.x, this.y);
+    
+    ctx.strokeStyle = 'hsla(' + this.hue + ', 100%, ' + this.brightness + '%, ' + this.alpha + ')';
+    
+    ctx.stroke();
+    
+}
+
+// 
+// Update (animate) the Explosion particle
+//
+ExplosionParticle.prototype.update = function(index) {
+    
+    // remove the last element in the coordinates array property
+    this.coordinates.pop();
+    this.coordinates.unshift([this.x, this.y]);
+    
+    // slow down the explosion particle
+    this.speed *= this.friction;
+    
+    // calculate the current velocities based on angle and speed
+    
+    this.x += Math.cos(this.angle) *  this.speed;
+    
+    this.y += Math.sin(this.angle) * this.speed + this.gravity;
+    
+    this.alpha -= this.decay;
+    
+    if (this.alpha <= this.decay) {
+        particles.splice(index, 1); // remove this particle
+    }
+    
+}
+
+//
+// Create smoke for the explosion
+//
+
+function createSmoke(x, y) {
+    
+    var puffCount = 1;
+    
+    for (var i = 0; i < puffCount; i++) {
+        
+        smokePuffs.push(new SmokeParticle(x, y));
+        
+    }
+    
+}
+
+//
+// SmokeParticle cconstructor function
+//
+function SmokeParticle(x, y) {
+    
+    this.x = randRange(x - 25, x + 25);
+    this.y = randRange(y - 15, y + 15);
+    
+    this.xVelocity = randRange(.2, maxSmokeVelocity);
+    
+    this.yVelocity = randRange(-.1, -maxSmokeVelocity);
+    
+    this.alpha = 1; 
+    
+}
+
+SmokeParticle.prototype.draw = function(index) {
+    
+    if (smokeImage) {
+        
+        ctx.save();
+        
+        ctx.globalAlpha = 0.3;
+        
+        ctx.drawImage(smokeImage, this.x - smokeImage.width/2, this.y - smokeImage.height/2);
+        
+        ctx.restore();
+        
+    }
+    
+    
+}
+
+SmokeParticle.prototype.update = function(index) {
+    
+    this.x += this.xVelocity;
+    this.y += this.yVelocity;
+    
+    this.alpha -= .001;
+    
+    if (this.alpha <= 0) {
+        
+        smokePuffs.splice(index, 1);
         
     }
     
@@ -195,6 +403,27 @@ function heartBeat() {
         
     }
     
+    
+    // Loop over each Explosion particle, draw it, and animate it.
+    var i = particles.length;
+    
+    while(i--) {
+        
+        particles[i].draw();
+        particles[i].update(i);
+        
+    }
+    
+    // Loop over each Smoke particle, draw it, and animate it.
+    var i = smokePuffs.length;
+    
+    while(i--) {
+        
+        smokePuffs[i].draw();
+        smokePuffs[i].update(i);
+        
+    }
+    
     // Launch fireworks automatically to random target coordinates
     // when the mouse is not pressed down
     if (timerTick >= timerTotal) {
@@ -216,7 +445,52 @@ function heartBeat() {
         
     }
     
+    // Limit the rate at which fireworks get launched when user
+    // presses mouse down
+    if (limiterTick >= limiterTotal) {
+        
+        if (mouseDown) {
+            
+            // Launch firework from bottom-middle of screen,
+            // then set random target coordinates based on 
+            // mouse position.
+
+            fireworks.push(new Firework(canvasWidth/2, canvasHeight, mouseXposition, mouseYposition));
+            
+            limiterTick = 0;
+
+            
+        }
+        
+    } else {
+        
+     
+        limiterTick++;
+        
+    }
+    
 }
+
+canvas.addEventListener('mousemove', function(e) {
+    
+    mouseXposition = e.pageX - canvas.offsetLeft;
+    mouseYposition = e.pageY - canvas.offsetTop;
+    
+});
+
+canvas.addEventListener('mousedown', function(e) {
+    
+    e.preventDefault();
+    mouseDown = true;
+    
+});
+
+canvas.addEventListener('mouseup', function(e) {
+    
+    e.preventDefault();
+    mouseDown = false;
+    
+});
 
 // Call heartBeat() once the page loads
 window.onload = heartBeat;
